@@ -382,4 +382,154 @@ export function findPossiblePlaces(input) {
   return places;
 }
 
+/**
+ * 자모 풀에서 가능한 모든 한글 문자열 생성 (모든 자모를 소진해야 함)
+ * @param {string[]} consonants - 사용 가능한 자음 풀
+ * @param {string[]} vowels - 사용 가능한 모음 풀
+ * @returns {string[]} 가능한 문자열들
+ */
+function generateAllWords(consonants, vowels) {
+  if (vowels.length === 0) {
+    return consonants.length === 0 ? [''] : [];
+  }
+
+  const results = [];
+  const usedCho = new Set();
+
+  for (let ci = 0; ci < consonants.length; ci++) {
+    if (usedCho.has(consonants[ci])) continue;
+    usedCho.add(consonants[ci]);
+
+    const cho = consonants[ci];
+    const remCons = [...consonants.slice(0, ci), ...consonants.slice(ci + 1)];
+
+    const usedJung = new Set();
+    for (let vi = 0; vi < vowels.length; vi++) {
+      if (usedJung.has(vowels[vi])) continue;
+      usedJung.add(vowels[vi]);
+
+      const jung = vowels[vi];
+      const remVows = [...vowels.slice(0, vi), ...vowels.slice(vi + 1)];
+
+      // 종성 없이
+      if (remCons.length <= remVows.length * 2 && remCons.length >= remVows.length) {
+        const char = composeFromJamo(cho, jung, '');
+        if (char) {
+          for (const suffix of generateAllWords(remCons, remVows)) {
+            results.push(char + suffix);
+          }
+        }
+      }
+
+      // 종성 있게
+      const usedJong = new Set();
+      for (let ji = 0; ji < remCons.length; ji++) {
+        if (usedJong.has(remCons[ji])) continue;
+        usedJong.add(remCons[ji]);
+
+        const jong = remCons[ji];
+        if (!JONG.includes(jong)) continue;
+
+        const remConsAfterJong = [...remCons.slice(0, ji), ...remCons.slice(ji + 1)];
+        if (remConsAfterJong.length > remVows.length * 2 || remConsAfterJong.length < remVows.length) continue;
+
+        const char = composeFromJamo(cho, jung, jong);
+        if (char) {
+          for (const suffix of generateAllWords(remConsAfterJong, remVows)) {
+            results.push(char + suffix);
+          }
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 자모 재조합으로 이름 추정 결과 찾기
+ * @param {string} input - 입력 단어
+ * @returns {string[]} 이름으로 추정되는 조합들
+ */
+export function findJamoNameAnagrams(input) {
+  const chars = [...input.replace(/\s/g, '')];
+  if (!chars.every(isHangul)) return [];
+
+  const consonants = [];
+  const vowels = [];
+  for (const char of chars) {
+    const parts = decompose(char);
+    if (parts) {
+      consonants.push(parts.cho);
+      vowels.push(parts.jung);
+      if (parts.jong) consonants.push(parts.jong);
+    }
+  }
+
+  if (vowels.length < 2 || vowels.length > 3) return [];
+
+  const results = new Set();
+
+  for (const surname of KOREAN_SURNAMES) {
+    const sp = decompose(surname);
+    if (!sp) continue;
+
+    const tempCons = [...consonants];
+    const tempVows = [...vowels];
+
+    // 성씨에 필요한 자모 추출
+    const choIdx = tempCons.indexOf(sp.cho);
+    if (choIdx === -1) continue;
+    tempCons.splice(choIdx, 1);
+
+    const jungIdx = tempVows.indexOf(sp.jung);
+    if (jungIdx === -1) continue;
+    tempVows.splice(jungIdx, 1);
+
+    if (sp.jong) {
+      const jongIdx = tempCons.indexOf(sp.jong);
+      if (jongIdx === -1) continue;
+      tempCons.splice(jongIdx, 1);
+    }
+
+    // 나머지 자모로 이름 부분 (1~2음절) 생성 가능한지 확인
+    if (tempVows.length < 1 || tempVows.length > 2) continue;
+    if (tempCons.length < tempVows.length || tempCons.length > tempVows.length * 2) continue;
+
+    const givenNames = generateAllWords(tempCons, tempVows);
+    for (const gn of givenNames) {
+      const fullName = surname + gn;
+      if (fullName !== input) {
+        results.add(fullName);
+      }
+    }
+  }
+
+  return [...results];
+}
+
+/**
+ * 자모 재조합으로 장소/국가 찾기
+ * 입력 단어와 같은 자모 구성인 장소명 검색
+ * @param {string} input - 입력 단어
+ * @returns {string[]} 장소/국가 목록
+ */
+export function findJamoPlaceAnagrams(input) {
+  const chars = [...input.replace(/\s/g, '')];
+  if (!chars.every(isHangul)) return [];
+
+  const inputJamoKey = decomposeString(input.replace(/\s/g, '')).sort().join('');
+
+  const results = [];
+  for (const place of KOREAN_PLACES) {
+    if (place === input) continue;
+    const placeJamoKey = decomposeString(place).sort().join('');
+    if (placeJamoKey === inputJamoKey) {
+      results.push(place);
+    }
+  }
+
+  return results;
+}
+
 export { CHO, JUNG, JONG, KOREAN_SURNAMES, KOREAN_PLACES };

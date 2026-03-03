@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { findAnagrams } from '../utils/anagram';
-import { findPossibleNames, findPossiblePlaces } from '../utils/korean';
+import { findPossibleNames, findPossiblePlaces, findJamoNameAnagrams, findJamoPlaceAnagrams } from '../utils/korean';
 import KoreanOptions from './KoreanOptions';
 
 export default function SolverMode({ language, dictionary }) {
@@ -23,18 +23,21 @@ export default function SolverMode({ language, dictionary }) {
       const found = findAnagrams(input.trim(), index, mode);
       setDictResults(found);
 
-      // 한국어일 때 이름/고유명사 추정 (글자 단위, 자모 단위 모두)
+      // 한국어일 때 이름/고유명사 추정
       if (language === 'ko') {
         const foundSet = new Set(found.map(w => w.toLowerCase()));
 
-        // 고유명사 (장소/국가) 검색 - 글자 단위 순열로 검색
-        const places = findPossiblePlaces(input.trim());
+        // 자모 모드: 자모 재조합으로 검색, 글자 모드: 글자 순열로 검색
+        const places = mode === 'jamo'
+          ? findJamoPlaceAnagrams(input.trim())
+          : findPossiblePlaces(input.trim());
         const filteredPlaces = places.filter(p => !foundSet.has(p.toLowerCase()));
         setPlaceResults(filteredPlaces.length > 0 ? filteredPlaces : null);
 
-        // 이름 추정 검색 - 글자 단위 순열로 검색
         const placeSet = new Set(filteredPlaces.map(p => p.toLowerCase()));
-        const names = findPossibleNames(input.trim());
+        const names = mode === 'jamo'
+          ? findJamoNameAnagrams(input.trim())
+          : findPossibleNames(input.trim());
         const filteredNames = names.filter(n => !foundSet.has(n.toLowerCase()) && !placeSet.has(n.toLowerCase()));
         setNameResults(filteredNames.length > 0 ? filteredNames : null);
       } else {
