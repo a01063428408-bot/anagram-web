@@ -260,13 +260,16 @@ const KOREAN_SURNAMES = [
 
 /**
  * 한국 이름으로 추정되는지 확인
- * 조건: 2~3글자, 모두 한글, 첫 글자가 성씨
+ * 조건: 2~3글자, 모두 한글, 첫 글자가 성씨, 나머지 글자가 일반적인 이름 글자
  */
 export function isPossibleKoreanName(word) {
   const chars = [...word];
   if (chars.length < 2 || chars.length > 3) return false;
   if (!chars.every(isHangul)) return false;
-  return KOREAN_SURNAMES.includes(chars[0]);
+  if (!KOREAN_SURNAMES.includes(chars[0])) return false;
+  // 이름 부분(성씨 제외)이 실제 한국 이름에서 흔한 글자인지 확인
+  const givenName = chars.slice(1);
+  return givenName.every(ch => KOREAN_NAME_SYLLABLES.has(ch));
 }
 
 /**
@@ -498,6 +501,7 @@ export function findJamoNameAnagrams(input) {
 
     const givenNames = generateAllWords(tempCons, tempVows);
     for (const gn of givenNames) {
+      if (!isRealisticGivenName(gn)) continue; // 비현실적 이름 필터링
       const fullName = surname + gn;
       if (fullName !== input) {
         results.add(fullName);
@@ -532,4 +536,35 @@ export function findJamoPlaceAnagrams(input) {
   return results;
 }
 
-export { CHO, JUNG, JONG, KOREAN_SURNAMES, KOREAN_PLACES };
+// 실제 한국인 이름에서 자주 사용되는 이름 글자 (약 287개)
+// 통계청 인기 이름, 인명용 한자표, 순우리말 이름 분석 기반
+const KOREAN_NAME_SYLLABLES = new Set([
+  "가","각","간","갈","감","갑","강","개","거","건","걸","검","격","견","결","겸","경","계","고",
+  "곡","곤","곧","공","과","곽","관","광","굉","교","구","국","군","권","귀","규","균","극","근",
+  "글","금","급","긍","기","길","꽃","꿈","나","낙","난","남","납","내","녀","녕","노","녹","누",
+  "늘","능","님","다","단","달","담","답","당","대","덕","도","독","돈","돌","동","두","둔","득",
+  "든","라","란","람","랑","래","램","량","려","력","련","렬","령","로","록","료","룡","루","류",
+  "름","리","린","립","마","만","말","망","매","맹","명","모","목","몽","묘","무","묵","문","미",
+  "민","바","박","반","발","배","백","범","벽","별","병","보","복","봄","봉","부","비","빈","빛",
+  "사","산","삼","상","새","샘","생","서","석","선","설","섬","섭","성","세","소","솔","솜","송",
+  "수","숙","순","숭","슬","습","승","시","식","신","실","심","쌍","아","악","안","애","야","약",
+  "양","억","언","얼","엄","여","연","염","엽","영","예","오","옥","온","올","옹","와","완","왕",
+  "요","용","우","욱","운","웅","원","월","위","유","윤","율","은","을","음","응","의","이","인",
+  "일","자","작","장","재","전","절","점","정","제","조","종","주","준","중","지","직","진","찬",
+  "참","창","채","척","천","철","첨","초","추","춘","출","충","치","탁","탄","태","택","토","통",
+  "파","판","팔","평","포","표","풀","품","풍","필","하","학","한","함","합","항","해","향","허",
+  "헌","혁","현","협","형","혜","호","혼","홍","화","환","황","회","효","후","훈","휘","흠","흥",
+  "희","힘"
+]);
+
+/**
+ * 이름의 글자(given name 부분)가 실제 한국 이름에서 흔한 글자인지 확인
+ * @param {string} givenName - 이름 부분 (성씨 제외)
+ * @returns {boolean}
+ */
+function isRealisticGivenName(givenName) {
+  const chars = [...givenName];
+  return chars.every(ch => KOREAN_NAME_SYLLABLES.has(ch));
+}
+
+export { CHO, JUNG, JONG, KOREAN_SURNAMES, KOREAN_PLACES, KOREAN_NAME_SYLLABLES };

@@ -20,7 +20,7 @@ import { shuffle, isValidWord } from '../utils/anagram';
 
 export default function MakerMode({ language, dictionary }) {
   const [input, setInput] = useState('');
-  const [koreanMode, setKoreanMode] = useState('char');
+  const [koreanMode, setKoreanMode] = useState('jamo');
   const [cards, setCards] = useState([]);
   const [submitted, setSubmitted] = useState(false);
 

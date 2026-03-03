@@ -8,7 +8,7 @@ export default function SolverMode({ language, dictionary }) {
   const [dictResults, setDictResults] = useState(null);
   const [placeResults, setPlaceResults] = useState(null);
   const [nameResults, setNameResults] = useState(null);
-  const [koreanMode, setKoreanMode] = useState('char');
+  const [koreanMode, setKoreanMode] = useState('jamo');
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
 
