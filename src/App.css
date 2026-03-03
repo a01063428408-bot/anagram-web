@@ -494,18 +494,92 @@
   border-top: 1px solid #1a1a2e;
 }
 
-/* ===== 반응형 ===== */
-@media (max-width: 600px) {
+/* ===== 반응형: 태블릿 (768px 이하) ===== */
+@media (max-width: 768px) {
   .header {
-    padding: 1rem;
+    padding: 1rem 1.2rem;
+  }
+
+  .header-top {
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: stretch;
   }
 
   .logo {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .language-selector {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .main-content {
-    padding: 1rem;
+    padding: 1.2rem 1rem;
+  }
+
+  .mode-btn {
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .sortable-card {
+    width: 50px;
+    height: 50px;
+    font-size: 1.3rem;
+  }
+
+  .maker-result-word {
+    font-size: 1.3rem;
+  }
+
+  .ad-banner,
+  .ad-banner.placeholder {
+    min-height: 70px;
+  }
+}
+
+/* ===== 반응형: 모바일 (480px 이하) ===== */
+@media (max-width: 480px) {
+  .header {
+    padding: 0.8rem;
+  }
+
+  .logo {
+    font-size: 1.3rem;
+  }
+
+  .language-selector {
+    gap: 0.3rem;
+  }
+
+  .lang-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    gap: 0.25rem;
+  }
+
+  .lang-label {
+    display: inline;
+  }
+
+  .flag {
+    font-size: 1rem;
+  }
+
+  .mode-selector {
+    gap: 0.3rem;
+  }
+
+  .mode-btn {
+    font-size: 0.85rem;
+    padding: 0.55rem 0.5rem;
+  }
+
+  .main-content {
+    padding: 0.8rem 0.6rem;
   }
 
   .solver-input-group,
@@ -513,19 +587,123 @@
     flex-direction: column;
   }
 
+  .solver-input,
+  .maker-input {
+    font-size: 1rem;
+    padding: 0.8rem 1rem;
+  }
+
   .solver-btn,
   .maker-btn {
     width: 100%;
+    padding: 0.8rem;
+  }
+
+  .korean-options {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .card-container {
+    padding: 1rem;
+    gap: 0.4rem;
   }
 
   .sortable-card {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+  }
+
+  .maker-result {
+    padding: 0.8rem 1rem;
+    gap: 0.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .maker-result-word {
     font-size: 1.2rem;
   }
 
+  .maker-controls {
+    width: 100%;
+  }
+
+  .control-btn {
+    flex: 1;
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .result-card {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .lang-dropdown {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 180px;
+  }
+
+  @keyframes dropdownFade {
+    from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  .ad-banner,
+  .ad-banner.placeholder {
+    min-height: 60px;
+    margin: 0.8rem 0;
+    font-size: 0.75rem;
+  }
+
+  .footer {
+    padding: 1rem;
+    font-size: 0.75rem;
+  }
+
+  .loading-overlay {
+    padding: 2rem;
+  }
+}
+
+/* ===== 반응형: 아주 작은 화면 (360px 이하) ===== */
+@media (max-width: 360px) {
+  .logo {
+    font-size: 1.1rem;
+  }
+
+  .lang-btn {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .lang-label {
+    display: none;
+  }
+
+  .other-btn .lang-label {
+    display: none;
+  }
+
+  .other-btn .dropdown-arrow {
+    display: none;
+  }
+
   .mode-btn {
-    font-size: 0.9rem;
-    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .sortable-card {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+    border-radius: 8px;
   }
 }
