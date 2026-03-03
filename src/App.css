@@ -586,49 +586,23 @@
   background: linear-gradient(0deg, rgba(26, 26, 46, 0.8) 0%, transparent 100%);
 }
 
-.footer-notice {
-  max-width: 600px;
-  margin: 0 auto 1.2rem;
-  padding: 1rem 1.5rem;
-  background: rgba(255, 193, 7, 0.04);
-  border: 1px solid rgba(255, 193, 7, 0.12);
-  border-radius: 10px;
-  text-align: left;
+.notice-box {
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  color: #4a4a6a;
+  line-height: 1.6;
+  text-align: center;
 }
 
-.notice-title {
-  font-size: 0.85rem;
+.notice-label {
+  display: inline-block;
   font-weight: 600;
-  color: rgba(255, 193, 7, 0.6);
-  margin-bottom: 0.5rem;
-}
-
-.notice-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.notice-list li {
-  font-size: 0.78rem;
-  color: #5a5a7a;
-  padding-left: 1rem;
-  position: relative;
-  line-height: 1.5;
-}
-
-.notice-list li::before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: rgba(255, 193, 7, 0.4);
-}
-
-.notice-list li strong {
-  color: #7a7a9a;
+  color: rgba(255, 193, 7, 0.5);
+  margin-right: 0.4rem;
 }
 
 .footer-copyright {
