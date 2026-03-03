@@ -579,11 +579,62 @@
 /* ===== 푸터 ===== */
 .footer {
   text-align: center;
-  padding: 1.5rem;
+  padding: 1.5rem 2rem;
   color: #4a4a6a;
   font-size: 0.85rem;
   border-top: 1px solid #2a2a4a;
   background: linear-gradient(0deg, rgba(26, 26, 46, 0.8) 0%, transparent 100%);
+}
+
+.footer-notice {
+  max-width: 600px;
+  margin: 0 auto 1.2rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 193, 7, 0.04);
+  border: 1px solid rgba(255, 193, 7, 0.12);
+  border-radius: 10px;
+  text-align: left;
+}
+
+.notice-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 193, 7, 0.6);
+  margin-bottom: 0.5rem;
+}
+
+.notice-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.notice-list li {
+  font-size: 0.78rem;
+  color: #5a5a7a;
+  padding-left: 1rem;
+  position: relative;
+  line-height: 1.5;
+}
+
+.notice-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: rgba(255, 193, 7, 0.4);
+}
+
+.notice-list li strong {
+  color: #7a7a9a;
+}
+
+.footer-copyright {
+  color: #3a3a5a;
+  font-size: 0.8rem;
+  margin: 0;
 }
 
 /* ===== 반응형: 태블릿 (768px 이하) ===== */
