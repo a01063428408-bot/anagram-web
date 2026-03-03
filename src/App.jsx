@@ -21,7 +21,7 @@ export default function App() {
       />
 
       <main className="main-content">
-        <AdBanner />
+        <AdBanner adClient="ca-pub-5351713887787298" />
 
         {loading && (
           <div className="loading-overlay">
@@ -46,7 +46,7 @@ export default function App() {
           </>
         )}
 
-        <AdBanner />
+        <AdBanner adClient="ca-pub-5351713887787298" />
       </main>
 
       <footer className="footer">
