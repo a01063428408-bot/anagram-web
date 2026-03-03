@@ -115,6 +115,7 @@ export default function MakerMode({ language, dictionary }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            autoFocus
             placeholder={{ ko: '재배열할 단어를 입력하세요...', en: 'Enter a word to rearrange...', ja: '並べ替える単語を入力...', zh: '输入要重排的词...', es: 'Escribe una palabra...', fr: 'Entrez un mot...', de: 'Wort eingeben...' }[language] || 'Enter a word to rearrange...'}
           />
           <button className="maker-btn" onClick={handleSplit} disabled={!input.trim()}>

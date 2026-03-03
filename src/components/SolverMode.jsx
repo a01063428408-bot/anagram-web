@@ -68,6 +68,7 @@ export default function SolverMode({ language, dictionary }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
+          autoFocus
           placeholder={{ ko: '단어를 입력하세요...', en: 'Enter a word...', ja: '単語を入力...', zh: '输入一个词...', es: 'Escribe una palabra...', fr: 'Entrez un mot...', de: 'Wort eingeben...' }[language] || 'Enter a word...'}
         />
         <button className="solver-btn" onClick={handleSearch} disabled={!input.trim()}>
