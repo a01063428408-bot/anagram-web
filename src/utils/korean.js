@@ -133,6 +133,88 @@ export function recomposeFromJamo(jamo) {
 }
 
 /**
+ * 문자열을 자모 배열로 분해 (역할 정보 포함)
+ * @param {string} str - 한글 문자열
+ * @returns {{ char: string, role: string }[]} 역할 태그가 붙은 자모 배열
+ */
+export function decomposeStringWithRoles(str) {
+  const result = [];
+  for (const char of str) {
+    const parts = decompose(char);
+    if (parts) {
+      result.push({ char: parts.cho, role: 'cho' });
+      result.push({ char: parts.jung, role: 'jung' });
+      if (parts.jong) result.push({ char: parts.jong, role: 'jong' });
+    } else {
+      result.push({ char, role: 'other' });
+    }
+  }
+  return result;
+}
+
+/**
+ * 자모 카드를 역할별로 셔플하여 항상 유효한 음절을 형성
+ * @param {Array} cards - { id, char, role } 카드 배열
+ * @returns {Array} 셔플된 카드 배열
+ */
+export function jamoShuffle(cards) {
+  const choCards = [];
+  const jungCards = [];
+  const jongCards = [];
+  const otherCards = [];
+
+  for (const card of cards) {
+    switch (card.role) {
+      case 'cho': choCards.push(card); break;
+      case 'jung': jungCards.push(card); break;
+      case 'jong': jongCards.push(card); break;
+      default: otherCards.push(card); break;
+    }
+  }
+
+  // Fisher-Yates 셔플
+  const shuffleArr = (arr) => {
+    const result = [...arr];
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  };
+
+  const shuffledCho = shuffleArr(choCards);
+  const shuffledJung = shuffleArr(jungCards);
+  const shuffledJong = shuffleArr(jongCards);
+
+  const numSyllables = Math.min(shuffledCho.length, shuffledJung.length);
+
+  // 종성을 랜덤 음절 위치에 배분
+  const jongSlots = new Array(numSyllables).fill(false);
+  for (let i = 0; i < Math.min(shuffledJong.length, numSyllables); i++) {
+    jongSlots[i] = true;
+  }
+  const shuffledSlots = shuffleArr(jongSlots);
+
+  const result = [];
+  let jongIdx = 0;
+  let cardIdx = 0;
+
+  for (let i = 0; i < numSyllables; i++) {
+    result.push({ ...shuffledCho[i], id: `card-${cardIdx++}` });
+    result.push({ ...shuffledJung[i], id: `card-${cardIdx++}` });
+    if (shuffledSlots[i] && jongIdx < shuffledJong.length) {
+      result.push({ ...shuffledJong[jongIdx++], id: `card-${cardIdx++}` });
+    }
+  }
+
+  for (const card of otherCards) {
+    result.push({ ...card, id: `card-${cardIdx++}` });
+  }
+
+  return result;
+}
+
+/**
  * 글자 단위로 문자열을 배열로 분리
  */
 export function splitByChar(str) {

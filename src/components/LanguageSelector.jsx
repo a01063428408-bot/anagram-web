@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 
 const MAIN_LANGUAGES = [
-  { code: 'ko', label: '한국어', flag: '🇰🇷' },
-  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'ko', label: '한국어', tag: 'KR' },
+  { code: 'en', label: 'English', tag: 'US' },
 ];
 
 const OTHER_LANGUAGES = [
-  { code: 'ja', label: '日本語 (일본어)', flag: '🇯🇵' },
-  { code: 'zh', label: '中文 (중국어)', flag: '🇨🇳' },
-  { code: 'es', label: 'Español (스페인어)', flag: '🇪🇸' },
-  { code: 'fr', label: 'Français (프랑스어)', flag: '🇫🇷' },
-  { code: 'de', label: 'Deutsch (독일어)', flag: '🇩🇪' },
+  { code: 'ja', label: '日本語 (일본어)', tag: 'JP' },
+  { code: 'zh', label: '中文 (중국어)', tag: 'CN' },
+  { code: 'es', label: 'Español (스페인어)', tag: 'ES' },
+  { code: 'fr', label: 'Français (프랑스어)', tag: 'FR' },
+  { code: 'de', label: 'Deutsch (독일어)', tag: 'DE' },
 ];
 
 const ALL_LANGUAGES = [...MAIN_LANGUAGES, ...OTHER_LANGUAGES];
@@ -46,7 +46,7 @@ export default function LanguageSelector({ language, onChange }) {
           className={`lang-btn ${language === lang.code ? 'active' : ''}`}
           onClick={() => { onChange(lang.code); setDropdownOpen(false); }}
         >
-          <span className="flag">{lang.flag}</span>
+          <span className="lang-tag">{lang.tag})</span>
           <span className="lang-label">{lang.label}</span>
         </button>
       ))}
@@ -56,7 +56,7 @@ export default function LanguageSelector({ language, onChange }) {
           className={`lang-btn other-btn ${isOtherLang ? 'active' : ''}`}
           onClick={() => setDropdownOpen(prev => !prev)}
         >
-          <span className="flag">{isOtherLang ? currentOther.flag : '🌐'}</span>
+          <span className="lang-tag">{isOtherLang ? currentOther.tag + ')' : '+'}</span>
           <span className="lang-label">
             {isOtherLang ? currentOther.label : '그 외 언어'}
           </span>
@@ -71,7 +71,7 @@ export default function LanguageSelector({ language, onChange }) {
                 className={`lang-dropdown-item ${language === lang.code ? 'active' : ''}`}
                 onClick={() => handleOtherSelect(lang.code)}
               >
-                <span className="flag">{lang.flag}</span>
+                <span className="lang-tag">{lang.tag})</span>
                 <span>{lang.label}</span>
               </button>
             ))}

@@ -15,7 +15,7 @@ import {
 } from '@dnd-kit/sortable';
 import SortableCard from './SortableCard';
 import KoreanOptions from './KoreanOptions';
-import { decomposeString, recomposeFromJamo, splitByChar } from '../utils/korean';
+import { decomposeStringWithRoles, recomposeFromJamo, splitByChar, jamoShuffle } from '../utils/korean';
 import { shuffle, isValidWord } from '../utils/anagram';
 
 export default function MakerMode({ language, dictionary }) {
@@ -37,7 +37,10 @@ export default function MakerMode({ language, dictionary }) {
     let pieces;
 
     if (language === 'ko' && koreanMode === 'jamo') {
-      pieces = decomposeString(text);
+      const piecesWithRoles = decomposeStringWithRoles(text);
+      setCards(piecesWithRoles.map((p, i) => ({ id: `card-${i}`, char: p.char, role: p.role })));
+      setSubmitted(true);
+      return;
     } else {
       pieces = splitByChar(text);
     }
@@ -62,7 +65,11 @@ export default function MakerMode({ language, dictionary }) {
   };
 
   const handleShuffle = () => {
-    setCards((prev) => shuffle(prev));
+    if (language === 'ko' && koreanMode === 'jamo') {
+      setCards((prev) => jamoShuffle(prev));
+    } else {
+      setCards((prev) => shuffle(prev));
+    }
   };
 
   const handleReset = () => {
