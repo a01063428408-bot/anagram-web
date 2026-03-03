@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://anagram-web.vercel.app/sitemap.xml
