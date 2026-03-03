@@ -587,22 +587,27 @@
 }
 
 .notice-box {
-  margin-top: 1rem;
-  padding: 0.6rem 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid #2a2a4a;
-  border-radius: 8px;
-  font-size: 0.72rem;
-  color: #4a4a6a;
+  margin-top: 1.2rem;
+  padding: 0.7rem 1.2rem;
+  background: rgba(255, 193, 7, 0.06);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: #8a8aaa;
   line-height: 1.6;
   text-align: center;
 }
 
 .notice-label {
   display: inline-block;
-  font-weight: 600;
-  color: rgba(255, 193, 7, 0.5);
-  margin-right: 0.4rem;
+  font-weight: 700;
+  color: #ffc107;
+  background: rgba(255, 193, 7, 0.15);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 .footer-copyright {
