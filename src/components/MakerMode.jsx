@@ -15,7 +15,7 @@ import {
 } from '@dnd-kit/sortable';
 import SortableCard from './SortableCard';
 import KoreanOptions from './KoreanOptions';
-import { decomposeStringWithRoles, recomposeFromJamo, splitByChar, jamoShuffle } from '../utils/korean';
+import { decomposeStringWithRoles, recomposeFromJamo, splitByChar, jamoShuffle, isPossibleKoreanName, isPossiblePlace } from '../utils/korean';
 import { shuffle, isValidWord } from '../utils/anagram';
 
 export default function MakerMode({ language, dictionary }) {
@@ -93,6 +93,18 @@ export default function MakerMode({ language, dictionary }) {
     return isValidWord(resultString, dictionary.wordSet);
   }, [resultString, dictionary]);
 
+  // 고유명사(장소/국가) 확인
+  const isPlace = useMemo(() => {
+    if (language !== 'ko' || !resultString || isValid) return false;
+    return isPossiblePlace(resultString);
+  }, [resultString, language, isValid]);
+
+  // 한국 이름으로 추정되는지 확인
+  const isName = useMemo(() => {
+    if (language !== 'ko' || !resultString || isValid || isPlace) return false;
+    return isPossibleKoreanName(resultString);
+  }, [resultString, language, isValid, isPlace]);
+
   return (
     <div className="maker-mode">
       {!submitted ? (
@@ -145,8 +157,8 @@ export default function MakerMode({ language, dictionary }) {
               {resultString}
             </span>
             {resultString && (
-              <span className={`validity-badge ${isValid ? 'valid' : 'invalid'}`}>
-                {isValid ? '✅ 사전에 있는 단어!' : '❌ 사전에 없음'}
+              <span className={`validity-badge ${isValid ? 'valid' : isPlace ? 'place' : isName ? 'name' : 'invalid'}`}>
+                {isValid ? '✅ 사전에 있는 단어!' : isPlace ? '📍 고유명사 (장소/국가)' : isName ? '👤 이름으로 추정됨' : '❌ 사전에 없음'}
               </span>
             )}
           </div>

@@ -500,6 +500,57 @@
   border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
+.validity-badge.name {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.validity-badge.place {
+  background: rgba(0, 188, 212, 0.15);
+  color: #00bcd4;
+  border: 1px solid rgba(0, 188, 212, 0.3);
+}
+
+/* ===== 해석 결과 카테고리 ===== */
+.result-section {
+  margin-top: 1.2rem;
+}
+
+.result-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.result-section-title.dict {
+  color: #51cf66;
+  background: rgba(81, 207, 102, 0.1);
+}
+
+.result-section-title.place {
+  color: #00bcd4;
+  background: rgba(0, 188, 212, 0.1);
+}
+
+.result-section-title.name {
+  color: #ffc107;
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.name-card {
+  border-color: rgba(255, 193, 7, 0.3) !important;
+  background: rgba(255, 193, 7, 0.08) !important;
+}
+
+.place-card {
+  border-color: rgba(0, 188, 212, 0.3) !important;
+  background: rgba(0, 188, 212, 0.08) !important;
+}
+
 /* ===== 광고 배너 ===== */
 .ad-banner {
   margin: 1.5rem 0;

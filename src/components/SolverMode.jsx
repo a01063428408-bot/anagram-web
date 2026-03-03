@@ -1,25 +1,47 @@
 import { useState } from 'react';
 import { findAnagrams } from '../utils/anagram';
+import { findPossibleNames, findPossiblePlaces } from '../utils/korean';
 import KoreanOptions from './KoreanOptions';
-import ResultList from './ResultList';
 
 export default function SolverMode({ language, dictionary }) {
   const [input, setInput] = useState('');
-  const [results, setResults] = useState(null);
+  const [dictResults, setDictResults] = useState(null);
+  const [placeResults, setPlaceResults] = useState(null);
+  const [nameResults, setNameResults] = useState(null);
   const [koreanMode, setKoreanMode] = useState('char');
   const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   const handleSearch = () => {
     if (!input.trim() || !dictionary) return;
 
     setSearching(true);
 
-    // 비동기처럼 처리해서 UI 블로킹 방지
     setTimeout(() => {
       const mode = language === 'ko' ? koreanMode : 'char';
       const index = mode === 'jamo' ? dictionary.jamoIndex : dictionary.charIndex;
       const found = findAnagrams(input.trim(), index, mode);
-      setResults(found);
+      setDictResults(found);
+
+      if (language === 'ko' && mode === 'char') {
+        const foundSet = new Set(found.map(w => w.toLowerCase()));
+
+        // 고유명사 (장소/국가) 검색
+        const places = findPossiblePlaces(input.trim());
+        const filteredPlaces = places.filter(p => !foundSet.has(p.toLowerCase()));
+        setPlaceResults(filteredPlaces.length > 0 ? filteredPlaces : null);
+
+        // 이름 추정 검색
+        const placeSet = new Set(filteredPlaces.map(p => p.toLowerCase()));
+        const names = findPossibleNames(input.trim());
+        const filteredNames = names.filter(n => !foundSet.has(n.toLowerCase()) && !placeSet.has(n.toLowerCase()));
+        setNameResults(filteredNames.length > 0 ? filteredNames : null);
+      } else {
+        setPlaceResults(null);
+        setNameResults(null);
+      }
+
+      setSearched(true);
       setSearching(false);
     }, 10);
   };
@@ -29,6 +51,9 @@ export default function SolverMode({ language, dictionary }) {
       handleSearch();
     }
   };
+
+  const totalCount = (dictResults?.length || 0) + (placeResults?.length || 0) + (nameResults?.length || 0);
+  const hasAnyResults = totalCount > 0;
 
   return (
     <div className="solver-mode">
@@ -50,7 +75,61 @@ export default function SolverMode({ language, dictionary }) {
         <KoreanOptions koreanMode={koreanMode} onChange={setKoreanMode} />
       )}
 
-      <ResultList results={results} loading={searching} />
+      {searching && <div className="result-loading">검색 중...</div>}
+
+      {!searching && searched && !hasAnyResults && (
+        <div className="result-empty">
+          <p>애너그램을 찾을 수 없습니다.</p>
+          <p className="result-empty-hint">다른 단어를 입력해 보세요.</p>
+        </div>
+      )}
+
+      {!searching && hasAnyResults && (
+        <div className="result-list">
+          <h3 className="result-title">
+            총 {totalCount}개의 애너그램을 찾았습니다!
+          </h3>
+
+          {dictResults && dictResults.length > 0 && (
+            <div className="result-section">
+              <div className="result-section-title dict">
+                사전 단어 ({dictResults.length}개)
+              </div>
+              <div className="result-grid">
+                {dictResults.map((word, i) => (
+                  <div key={i} className="result-card">{word}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {placeResults && placeResults.length > 0 && (
+            <div className="result-section">
+              <div className="result-section-title place">
+                고유명사 - 장소/국가 ({placeResults.length}개)
+              </div>
+              <div className="result-grid">
+                {placeResults.map((word, i) => (
+                  <div key={i} className="result-card place-card">{word}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {nameResults && nameResults.length > 0 && (
+            <div className="result-section">
+              <div className="result-section-title name">
+                이름 추정 ({nameResults.length}개)
+              </div>
+              <div className="result-grid">
+                {nameResults.map((word, i) => (
+                  <div key={i} className="result-card name-card">{word}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
