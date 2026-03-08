@@ -512,6 +512,146 @@
   border: 1px solid rgba(0, 188, 212, 0.3);
 }
 
+/* ===== 입력 wrapper (검색 기록 드롭다운 기준) ===== */
+.input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.input-wrapper .solver-input {
+  width: 100%;
+}
+
+/* ===== 검색 기록 ===== */
+.search-history {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #1a1a2e;
+  border: 1px solid #3a3a5a;
+  border-radius: 10px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: dropdownFade 0.15s ease;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.history-label {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.history-clear-btn {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.history-clear-btn:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.history-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  border: none;
+  background: transparent;
+  color: #a0a0b0;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+
+.history-item:hover {
+  background: rgba(102, 126, 234, 0.15);
+  color: #e0e0e0;
+}
+
+.history-query {
+  color: #e0e0e0;
+}
+
+/* ===== 결과 헤더 (제목 + 복사/공유) ===== */
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.result-header .result-title {
+  margin-bottom: 0;
+}
+
+.result-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.action-btn {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid #3a3a5a;
+  border-radius: 8px;
+  background: transparent;
+  color: #a0a0b0;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+/* ===== 결과 카드 클릭 복사 ===== */
+.result-card {
+  cursor: pointer;
+}
+
+/* ===== 토스트 메시지 ===== */
+.toast-message {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(102, 126, 234, 0.95);
+  color: #fff;
+  padding: 0.6rem 1.5rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 999;
+  animation: toastFade 1.5s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes toastFade {
+  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ===== 해석 결과 카테고리 ===== */
 .result-section {
   margin-top: 1.2rem;

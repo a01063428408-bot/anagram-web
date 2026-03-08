@@ -1,7 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { findAnagrams, findSubsetAnagrams, findCompoundSplits } from '../utils/anagram';
 import { findPossibleNames, findPossiblePlaces, findJamoNameAnagrams, findJamoPlaceAnagrams, findPossibleAddresses, findJamoAddressAnagrams } from '../utils/korean';
 import KoreanOptions from './KoreanOptions';
+
+const HISTORY_KEY = 'anagram-history';
+const MAX_HISTORY = 15;
+
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch { return []; }
+}
+
+function saveHistory(list) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX_HISTORY)));
+}
 
 export default function SolverMode({ language, dictionary }) {
   const [input, setInput] = useState('');
@@ -15,16 +28,28 @@ export default function SolverMode({ language, dictionary }) {
   const [koreanMode, setKoreanMode] = useState('jamo');
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [history, setHistory] = useState(loadHistory);
+  const [showHistory, setShowHistory] = useState(false);
+  const inputRef = useRef(null);
+  const historyRef = useRef(null);
 
-  const handleSearch = () => {
-    if (!input.trim() || !dictionary) return;
+  const handleSearch = (searchValue) => {
+    const value = (searchValue || input).trim();
+    if (!value || !dictionary) return;
+
+    // 검색 기록 저장
+    const newHistory = [{ query: value, mode: koreanMode, timestamp: Date.now() }, ...history.filter(h => h.query !== value)].slice(0, MAX_HISTORY);
+    setHistory(newHistory);
+    saveHistory(newHistory);
+    setShowHistory(false);
 
     setSearching(true);
 
     setTimeout(() => {
       const mode = language === 'ko' ? koreanMode : 'char';
       const index = mode === 'jamo' ? dictionary.jamoIndex : dictionary.charIndex;
-      const found = findAnagrams(input.trim(), index, mode);
+      const found = findAnagrams(value, index, mode);
       setDictResults(found);
 
       let neoFound = [];
@@ -32,43 +57,38 @@ export default function SolverMode({ language, dictionary }) {
       let filteredAddresses = [];
       let filteredNames = [];
 
-      // 한국어일 때 신조어/이름/고유명사 추정
       if (language === 'ko') {
         const foundSet = new Set(found.map(w => w.toLowerCase()));
 
-        // 신조어 검색
         const neoIndex = mode === 'jamo' ? dictionary.neologismJamoIndex : dictionary.neologismCharIndex;
         if (neoIndex) {
-          neoFound = findAnagrams(input.trim(), neoIndex, mode);
+          neoFound = findAnagrams(value, neoIndex, mode);
           neoFound = neoFound.filter(w => !foundSet.has(w.toLowerCase()));
         }
         setNeologismResults(neoFound.length > 0 ? neoFound : null);
 
         const neoSet = new Set(neoFound.map(w => w.toLowerCase()));
 
-        // 장소/국가 검색
         const places = mode === 'jamo'
-          ? findJamoPlaceAnagrams(input.trim())
-          : findPossiblePlaces(input.trim());
+          ? findJamoPlaceAnagrams(value)
+          : findPossiblePlaces(value);
         filteredPlaces = places.filter(p => !foundSet.has(p.toLowerCase()) && !neoSet.has(p.toLowerCase()));
         setPlaceResults(filteredPlaces.length > 0 ? filteredPlaces : null);
 
         const placeSet = new Set(filteredPlaces.map(p => p.toLowerCase()));
 
-        // 주소/위치 검색
         const addresses = mode === 'jamo'
-          ? findJamoAddressAnagrams(input.trim())
-          : findPossibleAddresses(input.trim());
+          ? findJamoAddressAnagrams(value)
+          : findPossibleAddresses(value);
         filteredAddresses = addresses.filter(a => !foundSet.has(a.toLowerCase()) && !placeSet.has(a.toLowerCase()) && !neoSet.has(a.toLowerCase()));
         setAddressResults(filteredAddresses.length > 0 ? filteredAddresses : null);
 
         const addressSet = new Set(filteredAddresses.map(a => a.toLowerCase()));
 
-        // 이름 검색 (givenNameSet 전달로 정확도 향상)
         const gns = dictionary.givenNameSet;
         const names = mode === 'jamo'
-          ? findJamoNameAnagrams(input.trim(), gns)
-          : findPossibleNames(input.trim(), gns);
+          ? findJamoNameAnagrams(value, gns)
+          : findPossibleNames(value, gns);
         filteredNames = names.filter(n => !foundSet.has(n.toLowerCase()) && !placeSet.has(n.toLowerCase()) && !addressSet.has(n.toLowerCase()) && !neoSet.has(n.toLowerCase()));
         setNameResults(filteredNames.length > 0 ? filteredNames : null);
       } else {
@@ -78,13 +98,12 @@ export default function SolverMode({ language, dictionary }) {
         setNameResults(null);
       }
 
-      // 주요 결과가 없을 때 fallback: 부분 애너그램 + 복합어 분해
       const mainCount = found.length + neoFound.length + filteredPlaces.length + filteredAddresses.length + filteredNames.length;
       if (mainCount === 0) {
-        const subsets = findSubsetAnagrams(input.trim(), index, mode);
+        const subsets = findSubsetAnagrams(value, index, mode);
         setSubsetResults(subsets.length > 0 ? subsets : null);
 
-        const compounds = findCompoundSplits(input.trim(), index, mode);
+        const compounds = findCompoundSplits(value, index, mode);
         setCompoundResults(compounds.length > 0 ? compounds : null);
       } else {
         setSubsetResults(null);
@@ -99,27 +118,122 @@ export default function SolverMode({ language, dictionary }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
+    } else if (e.key === 'Escape') {
+      setShowHistory(false);
     }
+  };
+
+  // 전역 키보드 단축키: Ctrl+Enter → 검색, Escape → 입력창 포커스
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSearch();
+      } else if (e.key === 'Escape' && document.activeElement !== inputRef.current) {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  });
+
+  // 히스토리 외부 클릭 닫기
+  useEffect(() => {
+    const handler = (e) => {
+      if (historyRef.current && !historyRef.current.contains(e.target)) {
+        setShowHistory(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // 복사
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1500);
+  };
+
+  const copyText = (text) => {
+    navigator.clipboard.writeText(text).then(() => showToast('복사됨!'));
+  };
+
+  const copyAllResults = () => {
+    const parts = [];
+    if (dictResults?.length) parts.push(`[사전 단어] ${dictResults.join(', ')}`);
+    if (neologismResults?.length) parts.push(`[신조어] ${neologismResults.join(', ')}`);
+    if (placeResults?.length) parts.push(`[장소/국가] ${placeResults.join(', ')}`);
+    if (addressResults?.length) parts.push(`[주소/위치] ${addressResults.join(', ')}`);
+    if (nameResults?.length) parts.push(`[이름 추정] ${nameResults.join(', ')}`);
+    if (compoundResults?.length) parts.push(`[복합어] ${compoundResults.map(w => w.join('+')).join(', ')}`);
+    if (subsetResults?.length) parts.push(`[부분 애너그램] ${subsetResults.join(', ')}`);
+    if (parts.length) copyText(`"${input}" 애너그램 결과:\n${parts.join('\n')}`);
+  };
+
+  const shareResults = async () => {
+    const parts = [];
+    if (dictResults?.length) parts.push(dictResults.join(', '));
+    if (neologismResults?.length) parts.push(neologismResults.join(', '));
+    if (placeResults?.length) parts.push(placeResults.join(', '));
+    if (nameResults?.length) parts.push(nameResults.join(', '));
+    try {
+      await navigator.share({
+        title: `"${input}" 애너그램 결과 - Anagram Lab`,
+        text: `"${input}"의 애너그램: ${parts.join(', ')}`,
+        url: 'https://anagram-web.vercel.app',
+      });
+    } catch {}
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    saveHistory([]);
+    setShowHistory(false);
+  };
+
+  const selectHistory = (query) => {
+    setInput(query);
+    setShowHistory(false);
+    setTimeout(() => handleSearch(query), 0);
   };
 
   const mainCount = (dictResults?.length || 0) + (neologismResults?.length || 0) + (placeResults?.length || 0) + (addressResults?.length || 0) + (nameResults?.length || 0);
   const fallbackCount = (subsetResults?.length || 0) + (compoundResults?.length || 0);
   const totalCount = mainCount + fallbackCount;
   const hasAnyResults = totalCount > 0;
+  const canShare = typeof navigator.share === 'function';
 
   return (
     <div className="solver-mode">
-      <div className="solver-input-group">
-        <input
-          type="text"
-          className="solver-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          placeholder={{ ko: '단어를 입력하세요...', en: 'Enter a word...', ja: '単語を入力...', zh: '输入一个词...', es: 'Escribe una palabra...', fr: 'Entrez un mot...', de: 'Wort eingeben...' }[language] || 'Enter a word...'}
-        />
-        <button className="solver-btn" onClick={handleSearch} disabled={!input.trim()}>
+      <div className="solver-input-group" ref={historyRef}>
+        <div className="input-wrapper">
+          <input
+            ref={inputRef}
+            type="text"
+            className="solver-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => history.length > 0 && setShowHistory(true)}
+            autoFocus
+            placeholder={{ ko: '단어를 입력하세요... (Ctrl+Enter)', en: 'Enter a word... (Ctrl+Enter)', ja: '単語を入力... (Ctrl+Enter)', zh: '输入一个词... (Ctrl+Enter)', es: 'Escribe una palabra...', fr: 'Entrez un mot...', de: 'Wort eingeben...' }[language] || 'Enter a word...'}
+          />
+          {showHistory && history.length > 0 && (
+            <div className="search-history">
+              <div className="history-header">
+                <span className="history-label">최근 검색</span>
+                <button className="history-clear-btn" onClick={clearHistory}>전체 삭제</button>
+              </div>
+              {history.map((h, i) => (
+                <button key={i} className="history-item" onClick={() => selectHistory(h.query)}>
+                  <span className="history-query">{h.query}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <button className="solver-btn" onClick={() => handleSearch()} disabled={!input.trim()}>
           해석하기
         </button>
       </div>
@@ -139,12 +253,24 @@ export default function SolverMode({ language, dictionary }) {
 
       {!searching && hasAnyResults && (
         <div className="result-list">
-          <h3 className="result-title">
-            {mainCount > 0
-              ? `총 ${mainCount}개의 애너그램을 찾았습니다!`
-              : `정확한 애너그램은 없지만, ${fallbackCount}개의 관련 결과를 찾았습니다.`
-            }
-          </h3>
+          <div className="result-header">
+            <h3 className="result-title">
+              {mainCount > 0
+                ? `총 ${mainCount}개의 애너그램을 찾았습니다!`
+                : `정확한 애너그램은 없지만, ${fallbackCount}개의 관련 결과를 찾았습니다.`
+              }
+            </h3>
+            <div className="result-actions">
+              <button className="action-btn" onClick={copyAllResults} title="전체 결과 복사">
+                복사
+              </button>
+              {canShare && (
+                <button className="action-btn" onClick={shareResults} title="결과 공유">
+                  공유
+                </button>
+              )}
+            </div>
+          </div>
 
           {dictResults && dictResults.length > 0 && (
             <div className="result-section">
@@ -153,7 +279,7 @@ export default function SolverMode({ language, dictionary }) {
               </div>
               <div className="result-grid">
                 {dictResults.map((word, i) => (
-                  <div key={i} className="result-card">{word}</div>
+                  <div key={i} className="result-card" onClick={() => copyText(word)} title="클릭하여 복사">{word}</div>
                 ))}
               </div>
             </div>
@@ -166,7 +292,7 @@ export default function SolverMode({ language, dictionary }) {
               </div>
               <div className="result-grid">
                 {neologismResults.map((word, i) => (
-                  <div key={i} className="result-card neologism-card">{word}</div>
+                  <div key={i} className="result-card neologism-card" onClick={() => copyText(word)} title="클릭하여 복사">{word}</div>
                 ))}
               </div>
             </div>
@@ -179,7 +305,7 @@ export default function SolverMode({ language, dictionary }) {
               </div>
               <div className="result-grid">
                 {placeResults.map((word, i) => (
-                  <div key={i} className="result-card place-card">{word}</div>
+                  <div key={i} className="result-card place-card" onClick={() => copyText(word)} title="클릭하여 복사">{word}</div>
                 ))}
               </div>
             </div>
@@ -192,7 +318,7 @@ export default function SolverMode({ language, dictionary }) {
               </div>
               <div className="result-grid">
                 {addressResults.map((word, i) => (
-                  <div key={i} className="result-card address-card">{word}</div>
+                  <div key={i} className="result-card address-card" onClick={() => copyText(word)} title="클릭하여 복사">{word}</div>
                 ))}
               </div>
             </div>
@@ -205,7 +331,7 @@ export default function SolverMode({ language, dictionary }) {
               </div>
               <div className="result-grid">
                 {nameResults.map((word, i) => (
-                  <div key={i} className="result-card name-card">{word}</div>
+                  <div key={i} className="result-card name-card" onClick={() => copyText(word)} title="클릭하여 복사">{word}</div>
                 ))}
               </div>
             </div>
@@ -218,7 +344,7 @@ export default function SolverMode({ language, dictionary }) {
               </div>
               <div className="result-grid">
                 {compoundResults.map((words, i) => (
-                  <div key={i} className="result-card compound-card">
+                  <div key={i} className="result-card compound-card" onClick={() => copyText(words.join(' + '))} title="클릭하여 복사">
                     {words.join(' + ')}
                   </div>
                 ))}
@@ -233,13 +359,15 @@ export default function SolverMode({ language, dictionary }) {
               </div>
               <div className="result-grid">
                 {subsetResults.map((word, i) => (
-                  <div key={i} className="result-card subset-card">{word}</div>
+                  <div key={i} className="result-card subset-card" onClick={() => copyText(word)} title="클릭하여 복사">{word}</div>
                 ))}
               </div>
             </div>
           )}
         </div>
       )}
+
+      {toast && <div className="toast-message">{toast}</div>}
     </div>
   );
 }
