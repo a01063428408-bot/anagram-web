@@ -17,9 +17,45 @@ export async function loadDictionary(language) {
 
   // 한국어일 때만 자모 인덱스도 생성
   let jamoIndex = null;
+  let neologismCharIndex = null;
+  let neologismJamoIndex = null;
+  let nameCharIndex = null;
+  let nameJamoIndex = null;
+  let givenNameSet = null;
   if (language === 'ko') {
     jamoIndex = buildIndex(words, 'jamo');
+
+    // 신조어/줄임말 로드
+    try {
+      const neoResponse = await fetch('/dictionaries/ko-neologisms.json');
+      if (neoResponse.ok) {
+        const neoWords = await neoResponse.json();
+        neologismCharIndex = buildIndex(neoWords, 'char');
+        neologismJamoIndex = buildIndex(neoWords, 'jamo');
+      }
+    } catch (e) {
+      // 신조어 로드 실패 시 무시
+    }
+
+    // 한국인 이름 데이터 로드
+    try {
+      const [namesRes, givenRes] = await Promise.all([
+        fetch('/dictionaries/ko-names.json'),
+        fetch('/dictionaries/ko-given-names.json'),
+      ]);
+      if (namesRes.ok) {
+        const nameWords = await namesRes.json();
+        nameCharIndex = buildIndex(nameWords, 'char');
+        nameJamoIndex = buildIndex(nameWords, 'jamo');
+      }
+      if (givenRes.ok) {
+        const givenWords = await givenRes.json();
+        givenNameSet = new Set(givenWords);
+      }
+    } catch (e) {
+      // 이름 로드 실패 시 무시
+    }
   }
 
-  return { words, wordSet, charIndex, jamoIndex };
+  return { words, wordSet, charIndex, jamoIndex, neologismCharIndex, neologismJamoIndex, nameCharIndex, nameJamoIndex, givenNameSet };
 }

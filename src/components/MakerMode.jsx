@@ -15,7 +15,7 @@ import {
 } from '@dnd-kit/sortable';
 import SortableCard from './SortableCard';
 import KoreanOptions from './KoreanOptions';
-import { decomposeStringWithRoles, recomposeFromJamo, splitByChar, jamoShuffle, isPossibleKoreanName, isPossiblePlace } from '../utils/korean';
+import { decomposeStringWithRoles, recomposeFromJamo, splitByChar, jamoShuffle, isPossibleKoreanName, isPossiblePlace, isPossibleAddress } from '../utils/korean';
 import { shuffle, isValidWord } from '../utils/anagram';
 
 export default function MakerMode({ language, dictionary }) {
@@ -99,11 +99,17 @@ export default function MakerMode({ language, dictionary }) {
     return isPossiblePlace(resultString);
   }, [resultString, language, isValid]);
 
-  // 한국 이름으로 추정되는지 확인
-  const isName = useMemo(() => {
+  // 주소/위치 확인
+  const isAddress = useMemo(() => {
     if (language !== 'ko' || !resultString || isValid || isPlace) return false;
-    return isPossibleKoreanName(resultString);
+    return isPossibleAddress(resultString);
   }, [resultString, language, isValid, isPlace]);
+
+  // 한국 이름으로 추정되는지 확인 (givenNameSet으로 정확도 향상)
+  const isName = useMemo(() => {
+    if (language !== 'ko' || !resultString || isValid || isPlace || isAddress) return false;
+    return isPossibleKoreanName(resultString, dictionary?.givenNameSet);
+  }, [resultString, language, isValid, isPlace, isAddress, dictionary]);
 
   return (
     <div className="maker-mode">
@@ -158,8 +164,8 @@ export default function MakerMode({ language, dictionary }) {
               {resultString}
             </span>
             {resultString && (
-              <span className={`validity-badge ${isValid ? 'valid' : isPlace ? 'place' : isName ? 'name' : 'invalid'}`}>
-                {isValid ? '✅ 사전에 있는 단어!' : isPlace ? '📍 고유명사 (장소/국가)' : isName ? '👤 이름으로 추정됨' : '❌ 사전에 없음'}
+              <span className={`validity-badge ${isValid ? 'valid' : isPlace ? 'place' : isAddress ? 'address' : isName ? 'name' : 'invalid'}`}>
+                {isValid ? '✅ 사전에 있는 단어!' : isPlace ? '📍 고유명사 (장소/국가)' : isAddress ? '📌 주소/위치' : isName ? '👤 이름으로 추정됨' : '❌ 사전에 없음'}
               </span>
             )}
           </div>

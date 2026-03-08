@@ -259,17 +259,24 @@ const KOREAN_SURNAMES = [
 ];
 
 /**
- * 한국 이름으로 추정되는지 확인
- * 조건: 2~3글자, 모두 한글, 첫 글자가 성씨, 나머지 글자가 일반적인 이름 글자
+ * 한국 이름으로 추정되는지 확인 (givenNameSet 기반)
+ * givenNameSet이 없으면 기존 음절 기반으로 fallback
+ * @param {string} word - 확인할 단어
+ * @param {Set<string>} [givenNameSet] - 실제 이름 데이터 Set
  */
-export function isPossibleKoreanName(word) {
+export function isPossibleKoreanName(word, givenNameSet) {
   const chars = [...word];
   if (chars.length < 2 || chars.length > 3) return false;
   if (!chars.every(isHangul)) return false;
   if (!KOREAN_SURNAMES.includes(chars[0])) return false;
-  // 이름 부분(성씨 제외)이 실제 한국 이름에서 흔한 글자인지 확인
-  const givenName = chars.slice(1);
-  return givenName.every(ch => KOREAN_NAME_SYLLABLES.has(ch));
+  const givenName = chars.slice(1).join('');
+
+  // 실제 이름 데이터가 있으면 정확한 매칭
+  if (givenNameSet) {
+    return givenNameSet.has(givenName);
+  }
+  // fallback: 기존 음절 기반
+  return [...givenName].every(ch => KOREAN_NAME_SYLLABLES.has(ch));
 }
 
 /**
@@ -290,11 +297,11 @@ function getPermutations(arr) {
 /**
  * 입력 글자로 만들 수 있는 이름 추정 결과 반환
  * @param {string} input - 입력 단어
+ * @param {Set<string>} [givenNameSet] - 실제 이름 데이터 Set
  * @returns {string[]} 이름으로 추정되는 조합들
  */
-export function findPossibleNames(input) {
+export function findPossibleNames(input, givenNameSet) {
   const chars = [...input.replace(/\s/g, '')];
-  // 2~3글자만 처리 (순열 수가 적으므로)
   if (chars.length < 2 || chars.length > 3) return [];
   if (!chars.every(isHangul)) return [];
 
@@ -304,10 +311,10 @@ export function findPossibleNames(input) {
 
   for (const perm of perms) {
     const word = perm.join('');
-    if (word === input) continue; // 원본 제외
+    if (word === input) continue;
     if (seen.has(word)) continue;
     seen.add(word);
-    if (isPossibleKoreanName(word)) {
+    if (isPossibleKoreanName(word, givenNameSet)) {
       names.push(word);
     }
   }
@@ -452,9 +459,10 @@ function generateAllWords(consonants, vowels) {
 /**
  * 자모 재조합으로 이름 추정 결과 찾기
  * @param {string} input - 입력 단어
+ * @param {Set<string>} [givenNameSet] - 실제 이름 데이터 Set
  * @returns {string[]} 이름으로 추정되는 조합들
  */
-export function findJamoNameAnagrams(input) {
+export function findJamoNameAnagrams(input, givenNameSet) {
   const chars = [...input.replace(/\s/g, '')];
   if (!chars.every(isHangul)) return [];
 
@@ -480,7 +488,6 @@ export function findJamoNameAnagrams(input) {
     const tempCons = [...consonants];
     const tempVows = [...vowels];
 
-    // 성씨에 필요한 자모 추출
     const choIdx = tempCons.indexOf(sp.cho);
     if (choIdx === -1) continue;
     tempCons.splice(choIdx, 1);
@@ -495,13 +502,14 @@ export function findJamoNameAnagrams(input) {
       tempCons.splice(jongIdx, 1);
     }
 
-    // 나머지 자모로 이름 부분 (1~2음절) 생성 가능한지 확인
     if (tempVows.length < 1 || tempVows.length > 2) continue;
     if (tempCons.length < tempVows.length || tempCons.length > tempVows.length * 2) continue;
 
     const givenNames = generateAllWords(tempCons, tempVows);
     for (const gn of givenNames) {
-      if (!isRealisticGivenName(gn)) continue; // 비현실적 이름 필터링
+      // givenNameSet이 있으면 실제 이름 데이터로 검증, 없으면 기존 방식
+      const isValid = givenNameSet ? givenNameSet.has(gn) : isRealisticGivenName(gn);
+      if (!isValid) continue;
       const fullName = surname + gn;
       if (fullName !== input) {
         results.add(fullName);
@@ -567,4 +575,128 @@ function isRealisticGivenName(givenName) {
   return chars.every(ch => KOREAN_NAME_SYLLABLES.has(ch));
 }
 
-export { CHO, JUNG, JONG, KOREAN_SURNAMES, KOREAN_PLACES, KOREAN_NAME_SYLLABLES };
+// 한국 주소/위치 (구, 동, 주요 지역명)
+const KOREAN_ADDRESSES = [
+  // 서울 구
+  '강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구',
+  '노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구',
+  '성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구',
+  // 부산 구
+  '해운대구','수영구','사하구','동래구','남구','북구','사상구','연제구',
+  '금정구','부산진구','영도구','기장군',
+  // 인천 구
+  '남동구','부평구','계양구','미추홀구','연수구','서구',
+  // 대구 구
+  '수성구','달서구','달성군',
+  // 대전 구
+  '유성구','대덕구',
+  // 광주 구
+  '광산구',
+  // 서울 주요 동/지역
+  '강남','서초','잠실','여의도','명동','홍대','이태원','신촌','건대','합정',
+  '망원','성수','한남','압구정','청담','삼성','역삼','논현','신사','방배',
+  '잠원','반포','양재','개포','대치','도곡','일원','수서','가락','문정',
+  '장지','위례','천호','길동','암사','둔촌','고덕','상일','미아','수유',
+  '쌍문','번동','창동','도봉','방학','우이','왕십리','답십리','장안','전농',
+  '이문','휘경','회기','청량리','제기','신당','약수','금호','옥수','한남',
+  '보광','이촌','동빙고','서빙고','후암','남영','효창','공덕','아현','대흥',
+  '신수','상수','망원','연남','성산','상암','불광','녹번','갈현','구산',
+  '대조','응암','역촌','증산','수색','신도림','구로','가산','독산','시흥',
+  '관악','신림','봉천','낙성대','사당','이수','동작','노량진','흑석','상도',
+  '영등포','당산','문래','양평','선유','목동','신정','신월','화곡','발산',
+  '방화','개화','마곡','가양','등촌','염창','신목','양화','잠실새내',
+  // 경기 주요 지역
+  '분당','판교','광교','동탄','위례','일산','운정','산본','평촌','범계',
+  '정자','미금','수내','서현','야탑','모란','죽전','수지','기흥','영통',
+  '매탄','망포','세류','매교','행궁','능행','병점','오산','진위','송탄',
+  // 부산 주요 동/지역
+  '해운대','광안리','센텀','남포동','서면','부전','연산','사직','온천',
+  '덕천','구포','하단','괴정','대연','용호','부곡','장산','송정',
+  // 기타 주요 지역명
+  '해방촌','경리단','익선','을지로','종로','광화문','북촌','삼청','인사',
+  '대학로','혜화','동묘','신설','보문','안암','고려대','성신','길음',
+  '돈암','정릉','삼선','동선','월곡','종암','상월곡','하월곡','석관',
+  // 주요 도로/장소
+  '테헤란로','강남대로','올림픽대로','세종대로','종로',
+  // 주요 랜드마크/복합시설
+  '코엑스','잠실','여의도','광화문','남산','북한산','관악산','도봉산',
+  '수락산','불암산','아차산','용마산','인왕산','안산','매봉산',
+];
+
+/**
+ * 주소/위치 관련 접미사 패턴 확인
+ * '구', '동', '리', '면', '읍', '로', '길', '대로', '가' 등으로 끝나는 패턴
+ */
+const ADDRESS_SUFFIXES = ['구', '동', '리', '면', '읍', '로', '길', '가', '산', '역'];
+
+/**
+ * 주소/위치로 추정되는지 확인
+ */
+export function isPossibleAddress(word) {
+  if (KOREAN_ADDRESSES.includes(word)) return true;
+  // 2글자 이상이고 주소 접미사로 끝나는 경우
+  if (word.length >= 2 && [...word].every(isHangul)) {
+    return ADDRESS_SUFFIXES.some(suffix => word.endsWith(suffix) && word.length >= suffix.length + 1);
+  }
+  return false;
+}
+
+/**
+ * 입력 글자로 만들 수 있는 주소/위치 반환 (글자 단위)
+ */
+export function findPossibleAddresses(input) {
+  const chars = [...input.replace(/\s/g, '')];
+  if (chars.length < 2 || chars.length > 6) return [];
+  if (!chars.every(isHangul)) return [];
+
+  const results = new Set();
+
+  // 1. KOREAN_ADDRESSES 목록에서 애너그램 찾기
+  const inputSorted = [...chars].sort().join('');
+  for (const addr of KOREAN_ADDRESSES) {
+    if (addr === input) continue;
+    const addrChars = [...addr];
+    if (addrChars.length !== chars.length) continue;
+    if ([...addrChars].sort().join('') === inputSorted) {
+      results.add(addr);
+    }
+  }
+
+  // 2. 순열 중 주소 패턴에 맞는 것 찾기 (3글자 이하만 순열)
+  if (chars.length <= 3) {
+    const perms = getPermutations(chars);
+    for (const perm of perms) {
+      const word = perm.join('');
+      if (word === input) continue;
+      if (results.has(word)) continue;
+      if (isPossibleAddress(word) && !KOREAN_PLACES.includes(word)) {
+        results.add(word);
+      }
+    }
+  }
+
+  return [...results];
+}
+
+/**
+ * 자모 재조합으로 주소/위치 찾기
+ */
+export function findJamoAddressAnagrams(input) {
+  const chars = [...input.replace(/\s/g, '')];
+  if (!chars.every(isHangul)) return [];
+
+  const inputJamoKey = decomposeString(input.replace(/\s/g, '')).sort().join('');
+
+  const results = [];
+  for (const addr of KOREAN_ADDRESSES) {
+    if (addr === input) continue;
+    const addrJamoKey = decomposeString(addr).sort().join('');
+    if (addrJamoKey === inputJamoKey) {
+      results.push(addr);
+    }
+  }
+
+  return results;
+}
+
+export { CHO, JUNG, JONG, KOREAN_SURNAMES, KOREAN_PLACES, KOREAN_ADDRESSES, KOREAN_NAME_SYLLABLES };

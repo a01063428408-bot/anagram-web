@@ -531,14 +531,39 @@
   background: rgba(81, 207, 102, 0.1);
 }
 
+.result-section-title.neologism {
+  color: #ab47bc;
+  background: rgba(171, 71, 188, 0.1);
+}
+
 .result-section-title.place {
   color: #00bcd4;
   background: rgba(0, 188, 212, 0.1);
 }
 
+.result-section-title.address {
+  color: #ff7043;
+  background: rgba(255, 112, 67, 0.1);
+}
+
 .result-section-title.name {
   color: #ffc107;
   background: rgba(255, 193, 7, 0.1);
+}
+
+.result-section-title.compound {
+  color: #26a69a;
+  background: rgba(38, 166, 154, 0.1);
+}
+
+.result-section-title.subset {
+  color: #78909c;
+  background: rgba(120, 144, 156, 0.1);
+}
+
+.neologism-card {
+  border-color: rgba(171, 71, 188, 0.3) !important;
+  background: rgba(171, 71, 188, 0.08) !important;
 }
 
 .name-card {
@@ -549,6 +574,27 @@
 .place-card {
   border-color: rgba(0, 188, 212, 0.3) !important;
   background: rgba(0, 188, 212, 0.08) !important;
+}
+
+.address-card {
+  border-color: rgba(255, 112, 67, 0.3) !important;
+  background: rgba(255, 112, 67, 0.08) !important;
+}
+
+.compound-card {
+  border-color: rgba(38, 166, 154, 0.3) !important;
+  background: rgba(38, 166, 154, 0.08) !important;
+}
+
+.subset-card {
+  border-color: rgba(120, 144, 156, 0.3) !important;
+  background: rgba(120, 144, 156, 0.08) !important;
+}
+
+.validity-badge.address {
+  background: rgba(255, 112, 67, 0.15);
+  color: #ff7043;
+  border: 1px solid rgba(255, 112, 67, 0.3);
 }
 
 /* ===== 광고 배너 ===== */
